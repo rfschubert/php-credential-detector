@@ -114,7 +114,13 @@ class Detector
     protected function loadOnnxModel(): void
     {
         if ($this->onnxService === null) {
-            $this->onnxService = new OnnxModelService($this->getModelPath());
+            $modelDownloader = $this->modelDownloader ?: new ModelDownloader(new Client());
+            $this->onnxService = new OnnxModelService(
+                $this->getModelPath(),
+                $modelDownloader->getConfigPath(),
+                $modelDownloader->getVectorizerPath(),
+                $modelDownloader->getPatternsPath()
+            );
         }
     }
 

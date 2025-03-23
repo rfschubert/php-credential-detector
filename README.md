@@ -15,13 +15,29 @@ Este cliente PHP foi desenvolvido para consumir o modelo de machine learning tre
 - Alta performance e baixo consumo de recursos
 - APIs simples e intuitivas
 
-## Instalação (Em Breve)
+## Instalação
 
 ```bash
 composer require rfschubert/php-credential-detector
 ```
 
-## Uso Básico (Em Breve)
+### Configuração para ONNX Runtime (Opcional)
+
+Para habilitar a detecção baseada em IA, é recomendado instalar o ONNX Runtime para PHP:
+
+```bash
+# Instalar a dependência da extensão FFI
+sudo apt-get install php-ffi
+
+# Instalar a biblioteca ONNX Runtime
+# Veja instruções completas em ONNX_SETUP.md
+```
+
+Consulte o arquivo [ONNX_SETUP.md](ONNX_SETUP.md) para instruções detalhadas sobre como configurar o ONNX Runtime.
+
+**Nota**: Mesmo sem o ONNX Runtime, a biblioteca funcionará usando o método de fallback baseado em expressões regulares.
+
+## Uso Básico
 
 ```php
 <?php
@@ -41,14 +57,14 @@ if ($resultado->hasCredential()) {
 }
 ```
 
-## Integração com Laravel (Em Breve)
+## Integração com Laravel
 
 ### Configuração
 
 Publique o arquivo de configuração:
 
 ```bash
-php artisan vendor:publish --provider="RfSchubert\CredentialDetector\Laravel\CredentialDetectorServiceProvider"
+php artisan vendor:publish --provider="RfSchubert\CredentialDetector\Laravel\Providers\CredentialDetectorServiceProvider"
 ```
 
 Algumas das opções disponíveis no arquivo de configuração:
@@ -92,9 +108,11 @@ Esta biblioteca utiliza um inovador sistema de dupla validação:
 
 O sistema sempre escolhe a validação com maior nível de confiança, garantindo assim melhor precisão e reduzindo falsos positivos.
 
-## Em Desenvolvimento
+### Como Funciona
 
-Esta biblioteca está em desenvolvimento ativo. Em breve estará disponível para uso via Composer.
+Por padrão, a biblioteca tentará utilizar a detecção baseada em IA se o ONNX Runtime estiver disponível. Caso contrário, ou se ocorrer um erro durante a inferência do modelo, a biblioteca recorrerá ao método baseado em expressões regulares.
+
+Para forçar a utilização do modelo de IA, certifique-se de instalar o ONNX Runtime e configurar o ambiente conforme descrito em [ONNX_SETUP.md](ONNX_SETUP.md).
 
 ## Contribuição
 
