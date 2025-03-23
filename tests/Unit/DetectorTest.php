@@ -29,7 +29,8 @@ class DetectorTest extends TestCase
      */
     public function testNoCredentialInNormalText()
     {
-        $detector = $this->createMockDetector();
+        // Este teste precisa de um detector que NÃO detecte credenciais
+        $detector = $this->createMockDetector(0.7, false, 0.0);
         
         $result = $detector->detect('Este é um texto normal sem credenciais.');
         
@@ -58,7 +59,8 @@ class DetectorTest extends TestCase
     {
         $detector = $this->createMockDetector(0.7, false, 0.85);
         
-        $result = $detector->detect('Um texto que contém uma credencial não padrão');
+        $text = 'Um texto que contém uma credencial não padrão';
+        $result = $detector->detect($text);
         
         $this->assertTrue($result->hasCredential());
         $this->assertGreaterThanOrEqual(0.85, $result->getConfidence());
@@ -67,7 +69,7 @@ class DetectorTest extends TestCase
         // Verifica se a posição do match é o texto completo
         $positions = $result->getMatchPositions();
         $this->assertEquals(0, $positions[0][0]); // início
-        $this->assertEquals(47, $positions[0][1]); // fim (comprimento do texto)
+        $this->assertEquals(strlen($text), $positions[0][1]); // fim (comprimento do texto)
         $this->assertEquals('ai_detected', $positions[0][2]); // tipo
     }
     
@@ -79,7 +81,7 @@ class DetectorTest extends TestCase
         // Não queremos que o detector baixe ou carregue o modelo real durante os testes
         $detector = $this->getMockBuilder(Detector::class)
             ->setConstructorArgs([$threshold, null, false])
-            ->onlyMethods(['ensureModelAvailable', 'loadOnnxModel'])
+            ->onlyMethods(['ensureModelAvailable'])
             ->getMock();
         
         // Mock para o RegexMatcher
@@ -98,17 +100,15 @@ class DetectorTest extends TestCase
         $property->setAccessible(true);
         $property->setValue($detector, $regexMatcher);
         
-        // Mock para o OnnxModelService se houver valor de confiança da IA
-        if ($aiConfidence > 0) {
-            $onnxService = $this->createMock(OnnxModelService::class);
-            
-            $onnxService->method('predict')
-                ->willReturn([$aiConfidence, $aiConfidence >= 0.5]);
-            
-            $onnxProperty = $reflector->getProperty('onnxService');
-            $onnxProperty->setAccessible(true);
-            $onnxProperty->setValue($detector, $onnxService);
-        }
+        // Substituir o OnnxModelService (mesmo com confiança 0, para evitar que a implementação real seja chamada)
+        $onnxService = $this->createMock(OnnxModelService::class);
+        
+        $onnxService->method('predict')
+            ->willReturn([$aiConfidence, $aiConfidence >= 0.5]);
+        
+        $onnxProperty = $reflector->getProperty('onnxService');
+        $onnxProperty->setAccessible(true);
+        $onnxProperty->setValue($detector, $onnxService);
         
         return $detector;
     }

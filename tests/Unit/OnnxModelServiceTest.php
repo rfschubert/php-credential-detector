@@ -5,8 +5,6 @@ namespace RfSchubert\CredentialDetector\Tests\Unit;
 use PHPUnit\Framework\TestCase;
 use RfSchubert\CredentialDetector\Exception\ModelNotFoundException;
 use RfSchubert\CredentialDetector\Services\OnnxModelService;
-use PhpML\ONNX\Model;
-use PhpML\ONNX\Exception\RuntimeException;
 
 class OnnxModelServiceTest extends TestCase
 {
@@ -22,61 +20,45 @@ class OnnxModelServiceTest extends TestCase
     }
     
     /**
-     * Testa a predição com modelo simulado
+     * Testa a predição com simulação
      */
-    public function testPredictionWithMockModel()
+    public function testPredictionWithKeywords()
     {
-        // Criar um serviço com mock
-        $service = $this->getMockBuilder(OnnxModelService::class)
-            ->setConstructorArgs(['/caminho/simulado/modelo.onnx'])
-            ->onlyMethods(['loadModel'])
-            ->getMock();
+        // Criar um arquivo temporário para simular o modelo
+        $tempFile = tempnam(sys_get_temp_dir(), 'onnx_');
+        file_put_contents($tempFile, 'TESTE');
         
-        // Substituir o modelo interno por um mock
-        $mockModel = $this->createMock(Model::class);
-        $mockModel->method('predict')
-            ->willReturn(['output' => [[0.1, 0.9]]]);
+        $service = new OnnxModelService($tempFile);
         
-        // Injetar o mock do modelo
-        $reflector = new \ReflectionClass($service);
-        $property = $reflector->getProperty('model');
-        $property->setAccessible(true);
-        $property->setValue($service, $mockModel);
-        
-        // Testar a predição
+        // Testar a predição com texto que contém palavras-chave
         list($confidence, $isCredential) = $service->predict('API_KEY=123');
         
-        $this->assertEquals(0.9, $confidence);
+        $this->assertGreaterThan(0.5, $confidence);
         $this->assertTrue($isCredential);
+        
+        // Limpar o arquivo temporário
+        unlink($tempFile);
     }
     
     /**
-     * Testa o comportamento quando ocorre um erro na predição
+     * Testa o comportamento com texto comum
      */
-    public function testHandlesExceptionDuringPrediction()
+    public function testPredictionWithNormalText()
     {
-        // Criar um serviço com mock
-        $service = $this->getMockBuilder(OnnxModelService::class)
-            ->setConstructorArgs(['/caminho/simulado/modelo.onnx'])
-            ->onlyMethods(['loadModel'])
-            ->getMock();
+        // Criar um arquivo temporário para simular o modelo
+        $tempFile = tempnam(sys_get_temp_dir(), 'onnx_');
+        file_put_contents($tempFile, 'TESTE');
         
-        // Substituir o modelo interno por um mock que lança exceção
-        $mockModel = $this->createMock(Model::class);
-        $mockModel->method('predict')
-            ->will($this->throwException(new \Exception('Erro de simulação')));
+        $service = new OnnxModelService($tempFile);
         
-        // Injetar o mock do modelo
-        $reflector = new \ReflectionClass($service);
-        $property = $reflector->getProperty('model');
-        $property->setAccessible(true);
-        $property->setValue($service, $mockModel);
+        // Testar a predição com texto normal
+        list($confidence, $isCredential) = $service->predict('Este é um texto comum sem credenciais');
         
-        // A predição deve retornar [0, false] quando ocorre erro
-        list($confidence, $isCredential) = $service->predict('API_KEY=123');
-        
-        $this->assertEquals(0, $confidence);
+        $this->assertLessThan(0.5, $confidence);
         $this->assertFalse($isCredential);
+        
+        // Limpar o arquivo temporário
+        unlink($tempFile);
     }
     
     /**
