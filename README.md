@@ -9,6 +9,7 @@ Este cliente PHP foi desenvolvido para consumir o modelo de machine learning tre
 ## Características
 
 - Detecção de diversos tipos de credenciais em texto (senhas, tokens, chaves de API, etc.)
+- **Dupla validação com IA (usando modelo ONNX) e Regex para maior precisão**
 - Integração simples com Laravel através de Facade e Service Provider
 - Baixa taxa de falsos positivos
 - Alta performance e baixo consumo de recursos
@@ -50,6 +51,23 @@ Publique o arquivo de configuração:
 php artisan vendor:publish --provider="RfSchubert\CredentialDetector\Laravel\CredentialDetectorServiceProvider"
 ```
 
+Algumas das opções disponíveis no arquivo de configuração:
+
+```php
+// config/credential-detector.php
+
+return [
+    // Limiar de confiança para considerar uma string como credencial (0.0 a 1.0)
+    'confidence_threshold' => env('CREDENTIAL_DETECTOR_THRESHOLD', 0.7),
+    
+    // Padrões personalizados de regex (null para usar os padrões default)
+    'patterns' => null,
+    
+    // Pré-carregar o modelo de IA para melhor performance
+    'preload_model' => env('CREDENTIAL_DETECTOR_PRELOAD', false),
+];
+```
+
 ### Uso com Facade
 
 ```php
@@ -64,6 +82,15 @@ if ($resultado->hasCredential()) {
     // Trate a credencial encontrada
 }
 ```
+
+## Sistema de Dupla Validação
+
+Esta biblioteca utiliza um inovador sistema de dupla validação:
+
+1. **Expressões Regulares**: Detecta padrões conhecidos de credenciais usando regex otimizados
+2. **Inteligência Artificial**: Utiliza um modelo ONNX pré-treinado para detectar credenciais através de aprendizado de máquina
+
+O sistema sempre escolhe a validação com maior nível de confiança, garantindo assim melhor precisão e reduzindo falsos positivos.
 
 ## Em Desenvolvimento
 

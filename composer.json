@@ -1,0 +1,45 @@
+{
+    "name": "rfschubert/php-credential-detector",
+    "description": "Cliente PHP para o Detector de Padrões de Credenciais com integração para Laravel",
+    "type": "library",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Raphael Schubert",
+            "email": "raphael@schubert.com.br"
+        }
+    ],
+    "require": {
+        "php": "^7.4|^8.0",
+        "ext-json": "*",
+        "guzzlehttp/guzzle": "^7.0",
+        "php-ai/php-ml-onnx": "^0.1.0"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^9.0",
+        "orchestra/testbench": "^6.0|^7.0",
+        "mockery/mockery": "^1.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "RfSchubert\\CredentialDetector\\": "src/RfSchubert/CredentialDetector/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "RfSchubert\\CredentialDetector\\Tests\\": "tests/"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "RfSchubert\\CredentialDetector\\Laravel\\Providers\\CredentialDetectorServiceProvider"
+            ],
+            "aliases": {
+                "CredentialDetector": "RfSchubert\\CredentialDetector\\Laravel\\Facades\\CredentialDetector"
+            }
+        }
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true
+} 
