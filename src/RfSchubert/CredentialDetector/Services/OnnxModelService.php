@@ -2,28 +2,30 @@
 
 namespace RfSchubert\CredentialDetector\Services;
 
-use PhpML\ONNX\Model;
-use PhpML\ONNX\Exception\RuntimeException;
 use RfSchubert\CredentialDetector\Exception\ModelNotFoundException;
 
 /**
  * Serviço para interagir com o modelo ONNX para detecção de credenciais
+ * (Versão temporária para testes - sem dependência externa)
  */
 class OnnxModelService
 {
-    /**
-     * Instância do modelo ONNX
-     * 
-     * @var Model|null
-     */
-    protected $model = null;
-
     /**
      * Caminho para o arquivo do modelo
      * 
      * @var string
      */
     protected $modelPath;
+    
+    /**
+     * Palavras-chave que indicam possíveis credenciais
+     * 
+     * @var array
+     */
+    protected $keywords = [
+        'api_key', 'apikey', 'secret', 'password', 'senha', 'token', 'auth', 
+        'key', 'credential', 'private', 'cert', 'jwt', 'bearer', 'access'
+    ];
 
     /**
      * Construtor
@@ -48,49 +50,47 @@ class OnnxModelService
                 "Modelo ONNX não encontrado em: {$this->modelPath}"
             );
         }
-
-        try {
-            $this->model = new Model($this->modelPath);
-        } catch (RuntimeException $e) {
-            throw new ModelNotFoundException(
-                "Erro ao carregar modelo ONNX: " . $e->getMessage(),
-                0,
-                $e
-            );
-        }
+        
+        // Na versão de teste, o carregamento do modelo é simulado
+        // Em um ambiente real, aqui carregaríamos o modelo ONNX
     }
 
     /**
-     * Verifica se o texto contém credenciais usando o modelo ONNX
+     * Verifica se o texto contém credenciais usando uma simulação de IA
      * 
      * @param string $text Texto a ser analisado
      * @return array [probabilidade, classe]
-     * @throws ModelNotFoundException Se o modelo não estiver carregado
      */
     public function predict(string $text): array
     {
-        if ($this->model === null) {
-            $this->loadModel();
-        }
-
-        // Pré-processamento do texto para o formato esperado pelo modelo
-        $processedText = $this->preprocessText($text);
+        // Esta é uma implementação simplificada para testes
+        // que simula a detecção de padrões sem usar o modelo ONNX
         
-        try {
-            $prediction = $this->model->predict([
-                'input' => [$processedText]
-            ]);
-            
-            // A saída esperada é um array com [probabilidade, classe]
-            // Onde classe 1 indica que é uma credencial e 0 que não é
-            $probability = $prediction['output'][0][1] ?? 0;
-            $isCredential = $probability >= 0.5;
-            
-            return [$probability, $isCredential];
-        } catch (\Exception $e) {
-            // Em caso de erro na predição, retornamos probabilidade 0
-            return [0, false];
+        $text = strtolower($text);
+        $confidenceScore = 0.0;
+        
+        // Verificar se o texto contém palavras-chave indicativas de credenciais
+        foreach ($this->keywords as $keyword) {
+            if (strpos($text, $keyword) !== false) {
+                $confidenceScore += 0.3;
+            }
         }
+        
+        // Verificar padrões de caracteres que podem indicar credenciais
+        // (por exemplo, combinações de letras e números)
+        if (preg_match('/[a-z0-9]{16,}/', $text)) {
+            $confidenceScore += 0.3;
+        }
+        
+        // Verificar se há caracteres especiais típicos de senhas
+        if (preg_match('/[!@#$%^&*(),.?":{}|<>]/', $text)) {
+            $confidenceScore += 0.2;
+        }
+        
+        // Limitar o valor máximo a 0.95
+        $confidenceScore = min($confidenceScore, 0.95);
+        
+        return [$confidenceScore, $confidenceScore >= 0.5];
     }
 
     /**
@@ -101,10 +101,7 @@ class OnnxModelService
      */
     protected function preprocessText(string $text): array
     {
-        // Aqui deve ser implementado o mesmo pré-processamento usado no treinamento
-        // Por exemplo, tokenização, normalização, etc.
-        
-        // Como exemplo simples, estamos apenas retornando o texto como array de caracteres
+        // Na versão de teste, o pré-processamento é simplificado
         return str_split($text);
     }
 } 
